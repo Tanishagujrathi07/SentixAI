@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SentixAI</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f3f5f7;
+        }
+
+        header {
+            background: #202124;
+            color: white;
+            text-align: center;
+            padding: 25px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 25px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px #ddd;
+        }
+
+        select,
+        textarea,
+        button {
+            padding: 11px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        select {
+            width: 250px;
+        }
+
+        textarea {
+            width: 95%;
+            height: 90px;
+        }
+
+        button {
+            background: #202124;
+            color: white;
+            cursor: pointer;
+        }
+
+        .grid,
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .charts {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .box {
+            background: #f7f7f7;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        img {
+            max-width: 100%;
+        }
+
+        .positive {
+            color: green;
+            font-weight: bold;
+        }
+
+        .negative {
+            color: red;
+            font-weight: bold;
+        }
+
+        .neutral {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .review {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        @media(max-width:700px) {
+            .grid,
+            .charts {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>SentixAI</h1>
+    <p>AI Product Review & Sentiment Analytics</p>
+</header>
+
+<div class="container">
+
+    <div class="card">
+        <h2>🛍️ Select Product</h2>
+
+        <form method="POST">
+            <select name="product">
+                {% for name in names %}
+                    <option value="{{ name }}"
+                        {% if name == selected %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <button>Analyze</button>
+        </form>
+    </div>
+
+
+    <div class="card">
+
+        <h2>{{ selected }}</h2>
+
+        <p><b>Brand:</b> {{ detail[0] }}</p>
+        <p><b>Category:</b> {{ detail[1] }}</p>
+        <p><b>Price:</b> {{ detail[2] }}</p>
+        <p><b>About:</b> {{ detail[3] }}</p>
+        <p><b>Purchases:</b> {{ detail[4] }}</p>
+
+    </div>
+
+
+    <div class="card grid">
+
+        <div class="box">
+            Reviews
+            <h2>{{ total }}</h2>
+        </div>
+
+        <div class="box">
+            Rating
+            <h2>⭐ {{ rating }}</h2>
+        </div>
+
+        <div class="box">
+            Positive
+            <h2 class="positive">{{ positive }}%</h2>
+        </div>
+
+        <div class="box">
+            Negative
+            <h2 class="negative">{{ negative }}%</h2>
+        </div>
+
+    </div>
+
+
+    <div class="charts">
+
+        <div class="card">
+            <h2>🥧 Sentiment</h2>
+            <img src="data:image/png;base64,{{ pie }}">
+        </div>
+
+        <div class="card">
+            <h2>📊 Product Comparison</h2>
+            <img src="data:image/png;base64,{{ compare }}">
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>🛒 Most Purchased Products</h2>
+
+        <img src="data:image/png;base64,{{ purchase_chart }}">
+
+        <p>
+            🏆 Most purchased:
+            <b>{{ best_product }}</b>
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>🤖 AI Insights</h2>
+
+        <div class="grid">
+
+            <div class="box">
+                Confidence
+                <h2>{{ confidence }}%</h2>
+            </div>
+
+            <div class="box">
+                Sentiment Score
+                <h2>{{ score }}</h2>
+            </div>
+
+            <div class="box">
+                Clusters
+                <h2>{{ clusters }}</h2>
+            </div>
+
+            <div class="box">
+                Neutral
+                <h2 class="neutral">{{ neutral }}%</h2>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>🛠️ Where Should We Improve?</h2>
+
+        <p>
+            Based on negative reviews:
+        </p>
+
+        <h3>{{ improvement }}</h3>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>✍️ Analyze Your Review</h2>
+
+        <form action="/review" method="POST">
+
+            <input type="hidden"
+                   name="product"
+                   value="{{ selected }}">
+
+            <textarea
+                name="review"
+                placeholder="Write your review..."
+                required></textarea>
+
+            <br><br>
+
+            <select name="rating">
+                <option value="5">⭐⭐⭐⭐⭐ 5</option>
+                <option value="4">⭐⭐⭐⭐ 4</option>
+                <option value="3">⭐⭐⭐ 3</option>
+                <option value="2">⭐⭐ 2</option>
+                <option value="1">⭐ 1</option>
+            </select>
+
+            <button>Analyze My Review</button>
+
+        </form>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>📝 Customer Reviews</h2>
+
+        {% for r in reviews %}
+
+            <div class="review">
+
+                <p>{{ r.review }}</p>
+
+                <p>
+                    Rating:
+                    {% for i in range(r.rating) %}⭐{% endfor %}
+                </p>
+
+                {% if r.prediction == "Positive" %}
+                    <span class="positive">😊 Positive</span>
+
+                {% elif r.prediction == "Negative" %}
+                    <span class="negative">😡 Negative</span>
+
+                {% else %}
+                    <span class="neutral">😐 Neutral</span>
+                {% endif %}
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+</body>
+</html>
