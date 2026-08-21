@@ -31,6 +31,7 @@
             box-shadow: 0 3px 10px #ddd;
         }
 
+        input,
         select,
         textarea,
         button {
@@ -39,8 +40,9 @@
             border: 1px solid #ccc;
         }
 
+        input,
         select {
-            width: 250px;
+            width: 220px;
         }
 
         textarea {
@@ -96,6 +98,11 @@
             border-bottom: 1px solid #ddd;
         }
 
+        .source {
+            color: #555;
+            font-size: 14px;
+        }
+
         @media(max-width:700px) {
             .grid,
             .charts {
@@ -114,37 +121,85 @@
 
 <div class="container">
 
+    <!-- Product Search -->
     <div class="card">
-        <h2>🛍️ Select Product</h2>
+
+        <h2>🔎 Find a Product</h2>
 
         <form method="POST">
-            <select name="product">
-                {% for name in names %}
-                    <option value="{{ name }}"
-                        {% if name == selected %}selected{% endif %}>
-                        {{ name }}
+
+            <select name="category">
+                <option value="All">All Categories</option>
+
+                {% for c in categories %}
+                    <option value="{{ c }}"
+                        {% if c == category %}selected{% endif %}>
+                        {{ c }}
                     </option>
                 {% endfor %}
             </select>
 
-            <button>Analyze</button>
+            <input
+                type="text"
+                name="search"
+                value="{{ search }}"
+                placeholder="Search brand or model">
+
+            <button>Search</button>
+
         </form>
+
+        <br>
+
+        <form method="POST">
+
+            <input type="hidden"
+                   name="category"
+                   value="{{ category }}">
+
+            <input type="hidden"
+                   name="search"
+                   value="{{ search }}">
+
+            <select name="product">
+
+                {% for name in names %}
+
+                    <option value="{{ name }}"
+                        {% if name == selected %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+            <button>Analyze Product</button>
+
+        </form>
+
     </div>
 
 
+    <!-- Product Details -->
     <div class="card">
 
         <h2>{{ selected }}</h2>
 
         <p><b>Brand:</b> {{ detail[0] }}</p>
+
         <p><b>Category:</b> {{ detail[1] }}</p>
+
         <p><b>Price:</b> {{ detail[2] }}</p>
+
         <p><b>About:</b> {{ detail[3] }}</p>
+
         <p><b>Purchases:</b> {{ detail[4] }}</p>
 
     </div>
 
 
+    <!-- Main Analysis -->
     <div class="card grid">
 
         <div class="box">
@@ -170,21 +225,30 @@
     </div>
 
 
+    <!-- Charts -->
     <div class="charts">
 
         <div class="card">
-            <h2>🥧 Sentiment</h2>
+
+            <h2>🥧 Sentiment Analysis</h2>
+
             <img src="data:image/png;base64,{{ pie }}">
+
         </div>
 
+
         <div class="card">
+
             <h2>📊 Product Comparison</h2>
+
             <img src="data:image/png;base64,{{ compare }}">
+
         </div>
 
     </div>
 
 
+    <!-- Purchase Analysis -->
     <div class="card">
 
         <h2>🛒 Most Purchased Products</h2>
@@ -199,6 +263,38 @@
     </div>
 
 
+    <!-- Source Analysis -->
+    <div class="card">
+
+        <h2>🌐 Review Sources</h2>
+
+        <div class="grid">
+
+            {% for source, count in sources.items() %}
+
+                <div class="box">
+
+                    <b>{{ source }}</b>
+
+                    <h2>{{ count }}</h2>
+
+                    reviews
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+        <p>
+            Review source information helps compare feedback
+            collected from different platforms.
+        </p>
+
+    </div>
+
+
+    <!-- AI Insights -->
     <div class="card">
 
         <h2>🤖 AI Insights</h2>
@@ -230,6 +326,7 @@
     </div>
 
 
+    <!-- Improvement -->
     <div class="card">
 
         <h2>🛠️ Where Should We Improve?</h2>
@@ -243,6 +340,7 @@
     </div>
 
 
+    <!-- User Review -->
     <div class="card">
 
         <h2>✍️ Analyze Your Review</h2>
@@ -261,20 +359,25 @@
             <br><br>
 
             <select name="rating">
+
                 <option value="5">⭐⭐⭐⭐⭐ 5</option>
                 <option value="4">⭐⭐⭐⭐ 4</option>
                 <option value="3">⭐⭐⭐ 3</option>
                 <option value="2">⭐⭐ 2</option>
                 <option value="1">⭐ 1</option>
+
             </select>
 
-            <button>Analyze My Review</button>
+            <button>
+                Analyze My Review
+            </button>
 
         </form>
 
     </div>
 
 
+    <!-- Reviews -->
     <div class="card">
 
         <h2>📝 Customer Reviews</h2>
@@ -283,21 +386,39 @@
 
             <div class="review">
 
-                <p>{{ r.review }}</p>
+                <p>
+                    {{ r.review }}
+                </p>
 
                 <p>
                     Rating:
-                    {% for i in range(r.rating) %}⭐{% endfor %}
+                    {% for i in range(r.rating) %}
+                        ⭐
+                    {% endfor %}
+                </p>
+
+                <p class="source">
+                    Source: {{ r.source }}
                 </p>
 
                 {% if r.prediction == "Positive" %}
-                    <span class="positive">😊 Positive</span>
+
+                    <span class="positive">
+                        😊 Positive
+                    </span>
 
                 {% elif r.prediction == "Negative" %}
-                    <span class="negative">😡 Negative</span>
+
+                    <span class="negative">
+                        😡 Negative
+                    </span>
 
                 {% else %}
-                    <span class="neutral">😐 Neutral</span>
+
+                    <span class="neutral">
+                        😐 Neutral
+                    </span>
+
                 {% endif %}
 
             </div>
