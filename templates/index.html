@@ -1,431 +1,508 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>SentixAI</title>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial;
-            background: #f3f5f7;
-        }
+<title>SentixAI</title>
 
-        header {
-            background: #202124;
-            color: white;
-            text-align: center;
-            padding: 25px;
-        }
+<style>
 
-        .container {
-            width: 90%;
-            max-width: 1100px;
-            margin: 25px auto;
-        }
+*{box-sizing:border-box}
 
-        .card {
-            background: white;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 12px;
-            box-shadow: 0 3px 10px #ddd;
-        }
+body{
+margin:0;
+font-family:Arial;
+background:#071a33;
+color:#172033
+}
 
-        input,
-        select,
-        textarea,
-        button {
-            padding: 11px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-        }
+header{
+background:#06152b;
+color:white;
+text-align:center;
+padding:28px;
+border-bottom:3px solid #00b4d8
+}
 
-        input,
-        select {
-            width: 220px;
-        }
+header h1{
+margin:0;
+font-size:38px
+}
 
-        textarea {
-            width: 95%;
-            height: 90px;
-        }
+.container{
+width:90%;
+max-width:1150px;
+margin:25px auto
+}
 
-        button {
-            background: #202124;
-            color: white;
-            cursor: pointer;
-        }
+.card{
+background:#fff;
+padding:22px;
+margin:20px 0;
+border-radius:14px;
+box-shadow:0 5px 18px #0005
+}
 
-        .grid,
-        .charts {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-        }
+input,select,textarea{
+padding:12px;
+border:1px solid #ccd6e0;
+border-radius:7px
+}
 
-        .charts {
-            grid-template-columns: 1fr 1fr;
-        }
+input{
+width:65%
+}
 
-        .box {
-            background: #f7f7f7;
-            padding: 15px;
-            text-align: center;
-            border-radius: 8px;
-        }
+textarea{
+width:95%;
+height:90px
+}
 
-        img {
-            max-width: 100%;
-        }
+button,.buy{
+background:#0077b6;
+color:white;
+border:0;
+padding:12px 18px;
+border-radius:7px;
+cursor:pointer;
+text-decoration:none
+}
 
-        .positive {
-            color: green;
-            font-weight: bold;
-        }
+button:hover,.buy:hover{
+background:#00b4d8
+}
 
-        .negative {
-            color: red;
-            font-weight: bold;
-        }
+.grid,.charts{
+display:grid;
+gap:15px
+}
 
-        .neutral {
-            color: orange;
-            font-weight: bold;
-        }
+.grid{
+grid-template-columns:repeat(4,1fr)
+}
 
-        .review {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
+.charts{
+grid-template-columns:1fr 1fr
+}
 
-        .source {
-            color: #555;
-            font-size: 14px;
-        }
+.box{
+background:#eef7fc;
+padding:15px;
+text-align:center;
+border-radius:10px;
+border-left:4px solid #0077b6
+}
 
-        @media(max-width:700px) {
-            .grid,
-            .charts {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+.product{
+display:flex;
+gap:25px;
+align-items:center
+}
+
+.product img{
+width:240px;
+height:240px;
+object-fit:contain;
+border-radius:12px
+}
+
+.chart{
+width:100%
+}
+
+.seller,.review{
+padding:14px 5px;
+border-bottom:1px solid #ddd
+}
+
+.seller a{
+float:right
+}
+
+.positive{
+color:#008000;
+font-weight:bold
+}
+
+.negative{
+color:#d00000;
+font-weight:bold
+}
+
+.neutral{
+color:#d97700;
+font-weight:bold
+}
+
+.error{
+color:#d00000;
+font-weight:bold
+}
+
+.store{
+display:inline-block;
+margin:7px;
+padding:12px 16px;
+background:#0b2d4d;
+color:white;
+border-radius:8px;
+text-decoration:none
+}
+
+.store:hover{
+background:#0077b6
+}
+
+@media(max-width:700px){
+
+.grid,.charts{
+grid-template-columns:1fr
+}
+
+.product{
+flex-direction:column
+}
+
+input{
+width:100%;
+margin-bottom:10px
+}
+
+.seller a{
+float:none;
+display:block;
+margin-top:8px
+}
+
+}
+
+</style>
+
 </head>
+
 
 <body>
 
+
 <header>
-    <h1>SentixAI</h1>
-    <p>AI Product Review & Sentiment Analytics</p>
+
+<h1>SentixAI</h1>
+
+<p>AI Product Review & Sentiment Analytics</p>
+
 </header>
+
 
 <div class="container">
 
-    <!-- Product Search -->
-    <div class="card">
 
-        <h2>🔎 Find a Product</h2>
+<div class="card">
 
-        <form method="POST">
+<h2>🔎 Search Product</h2>
 
-            <select name="category">
-                <option value="All">All Categories</option>
+<form method="POST">
 
-                {% for c in categories %}
-                    <option value="{{ c }}"
-                        {% if c == category %}selected{% endif %}>
-                        {{ c }}
-                    </option>
-                {% endfor %}
-            </select>
+<input
+name="search"
+value="{{ search }}"
+placeholder="Search any brand or model..."
+required
+>
 
-            <input
-                type="text"
-                name="search"
-                value="{{ search }}"
-                placeholder="Search brand or model">
+<button>Search</button>
 
-            <button>Search</button>
+</form>
 
-        </form>
+{% if error %}
+<p class="error">{{ error }}</p>
+{% endif %}
 
-        <br>
+</div>
 
-        <form method="POST">
 
-            <input type="hidden"
-                   name="category"
-                   value="{{ category }}">
+{% if selected %}
 
-            <input type="hidden"
-                   name="search"
-                   value="{{ search }}">
 
-            <select name="product">
+<div class="card product">
 
-                {% for name in names %}
+{% if image %}
+<img src="{{ image }}">
+{% endif %}
 
-                    <option value="{{ name }}"
-                        {% if name == selected %}selected{% endif %}>
-                        {{ name }}
-                    </option>
+<div>
 
-                {% endfor %}
+<h2>{{ selected }}</h2>
 
-            </select>
+<p>
+<b>Seller:</b> {{ detail.source }}
+</p>
 
-            <button>Analyze Product</button>
+<p>
+<b>Price:</b> {{ detail.price }}
+</p>
 
-        </form>
+<p>
+<b>Rating:</b> ⭐ {{ rating }}
+</p>
 
-    </div>
+<p>
+<b>Reviews:</b> {{ total }}
+</p>
 
+{% if buy_link %}
+<a class="buy" href="{{ buy_link }}" target="_blank">
+🛒 View Product
+</a>
+{% endif %}
 
-    <!-- Product Details -->
-    <div class="card">
+</div>
 
-        <h2>{{ selected }}</h2>
+</div>
 
-        <p><b>Brand:</b> {{ detail[0] }}</p>
 
-        <p><b>Category:</b> {{ detail[1] }}</p>
+<div class="card grid">
 
-        <p><b>Price:</b> {{ detail[2] }}</p>
+<div class="box">
+Reviews
+<h2>{{ total }}</h2>
+</div>
 
-        <p><b>About:</b> {{ detail[3] }}</p>
+<div class="box">
+Rating
+<h2>⭐ {{ rating }}</h2>
+</div>
 
-        <p><b>Purchases:</b> {{ detail[4] }}</p>
+<div class="box">
+Positive
+<h2 class="positive">{{ positive }}%</h2>
+</div>
 
-    </div>
+<div class="box">
+Negative
+<h2 class="negative">{{ negative }}%</h2>
+</div>
 
+</div>
 
-    <!-- Main Analysis -->
-    <div class="card grid">
 
-        <div class="box">
-            Reviews
-            <h2>{{ total }}</h2>
-        </div>
+<div class="charts">
 
-        <div class="box">
-            Rating
-            <h2>⭐ {{ rating }}</h2>
-        </div>
 
-        <div class="box">
-            Positive
-            <h2 class="positive">{{ positive }}%</h2>
-        </div>
+<div class="card">
 
-        <div class="box">
-            Negative
-            <h2 class="negative">{{ negative }}%</h2>
-        </div>
+<h2>🥧 Review Sentiment</h2>
 
-    </div>
+{% if pie %}
+<img class="chart"
+src="data:image/png;base64,{{ pie }}">
+{% else %}
+<p>No review text available.</p>
+{% endif %}
 
+</div>
 
-    <!-- Charts -->
-    <div class="charts">
 
-        <div class="card">
+<div class="card">
 
-            <h2>🥧 Sentiment Analysis</h2>
+<h2>📊 Price Comparison</h2>
 
-            <img src="data:image/png;base64,{{ pie }}">
+{% if compare %}
+<img class="chart"
+src="data:image/png;base64,{{ compare }}">
+{% else %}
+<p>Price comparison unavailable.</p>
+{% endif %}
 
-        </div>
+</div>
 
 
-        <div class="card">
+</div>
 
-            <h2>📊 Product Comparison</h2>
 
-            <img src="data:image/png;base64,{{ compare }}">
+<div class="card">
 
-        </div>
+<h2>🛒 Where to Buy</h2>
 
-    </div>
+{% for p in products %}
 
+<div class="seller">
 
-    <!-- Purchase Analysis -->
-    <div class="card">
+<b>{{ p.source }}</b>
 
-        <h2>🛒 Most Purchased Products</h2>
+&nbsp; — &nbsp;
 
-        <img src="data:image/png;base64,{{ purchase_chart }}">
+<b>{{ p.price }}</b>
 
-        <p>
-            🏆 Most purchased:
-            <b>{{ best_product }}</b>
-        </p>
+{% if p.rating != "N/A" %}
+&nbsp; ⭐ {{ p.rating }}
+{% endif %}
 
-    </div>
+{% if p.link %}
 
+<a class="buy"
+href="{{ p.link }}"
+target="_blank">
+View Product →
+</a>
 
-    <!-- Source Analysis -->
-    <div class="card">
+{% endif %}
 
-        <h2>🌐 Review Sources</h2>
+</div>
 
-        <div class="grid">
+{% endfor %}
 
-            {% for source, count in sources.items() %}
+</div>
 
-                <div class="box">
 
-                    <b>{{ source }}</b>
+<div class="card">
 
-                    <h2>{{ count }}</h2>
+<h2>🏪 Search This Product On</h2>
 
-                    reviews
+{% for name,link in stores %}
 
-                </div>
+<a
+class="store"
+href="{{ link }}"
+target="_blank">
+{{ name }}
+</a>
 
-            {% endfor %}
+{% endfor %}
 
-        </div>
+</div>
 
-        <p>
-            Review source information helps compare feedback
-            collected from different platforms.
-        </p>
 
-    </div>
+<div class="card">
 
+<h2>🤖 AI Insights</h2>
 
-    <!-- AI Insights -->
-    <div class="card">
+<div class="grid">
 
-        <h2>🤖 AI Insights</h2>
+<div class="box">
+Sentiment Score
+<h2>{{ score }}</h2>
+</div>
 
-        <div class="grid">
+<div class="box">
+Positive
+<h2 class="positive">{{ positive }}%</h2>
+</div>
 
-            <div class="box">
-                Confidence
-                <h2>{{ confidence }}%</h2>
-            </div>
+<div class="box">
+Neutral
+<h2 class="neutral">{{ neutral }}%</h2>
+</div>
 
-            <div class="box">
-                Sentiment Score
-                <h2>{{ score }}</h2>
-            </div>
+<div class="box">
+Negative
+<h2 class="negative">{{ negative }}%</h2>
+</div>
 
-            <div class="box">
-                Clusters
-                <h2>{{ clusters }}</h2>
-            </div>
+</div>
 
-            <div class="box">
-                Neutral
-                <h2 class="neutral">{{ neutral }}%</h2>
-            </div>
+</div>
 
-        </div>
 
-    </div>
+<div class="card">
 
+<h2>🛠️ Where Should We Improve?</h2>
 
-    <!-- Improvement -->
-    <div class="card">
+<p>
+Based on negative review feedback:
+</p>
 
-        <h2>🛠️ Where Should We Improve?</h2>
+<h3>{{ improvement }}</h3>
 
-        <p>
-            Based on negative reviews:
-        </p>
+</div>
 
-        <h3>{{ improvement }}</h3>
 
-    </div>
+<div class="card">
 
+<h2>✍️ Analyze Your Review</h2>
 
-    <!-- User Review -->
-    <div class="card">
+<form action="/review" method="POST">
 
-        <h2>✍️ Analyze Your Review</h2>
+<input
+type="hidden"
+name="product"
+value="{{ selected }}"
+>
 
-        <form action="/review" method="POST">
+<textarea
+name="review"
+placeholder="Write your review..."
+required
+></textarea>
 
-            <input type="hidden"
-                   name="product"
-                   value="{{ selected }}">
+<br><br>
 
-            <textarea
-                name="review"
-                placeholder="Write your review..."
-                required></textarea>
+<select name="rating">
 
-            <br><br>
+<option value="5">⭐⭐⭐⭐⭐ 5</option>
+<option value="4">⭐⭐⭐⭐ 4</option>
+<option value="3">⭐⭐⭐ 3</option>
+<option value="2">⭐⭐ 2</option>
+<option value="1">⭐ 1</option>
 
-            <select name="rating">
+</select>
 
-                <option value="5">⭐⭐⭐⭐⭐ 5</option>
-                <option value="4">⭐⭐⭐⭐ 4</option>
-                <option value="3">⭐⭐⭐ 3</option>
-                <option value="2">⭐⭐ 2</option>
-                <option value="1">⭐ 1</option>
+<button>
+Analyze My Review
+</button>
 
-            </select>
+</form>
 
-            <button>
-                Analyze My Review
-            </button>
+</div>
 
-        </form>
 
-    </div>
+<div class="card">
 
+<h2>📝 Customer Reviews</h2>
 
-    <!-- Reviews -->
-    <div class="card">
+{% for r in reviews %}
 
-        <h2>📝 Customer Reviews</h2>
+<div class="review">
 
-        {% for r in reviews %}
+<p>{{ r.review }}</p>
 
-            <div class="review">
+{% if r.rating %}
+<p>
+Rating:
+{% for i in range(r.rating) %}⭐{% endfor %}
+</p>
+{% endif %}
 
-                <p>
-                    {{ r.review }}
-                </p>
+<small>
+Source: {{ r.source }}
+</small>
 
-                <p>
-                    Rating:
-                    {% for i in range(r.rating) %}
-                        ⭐
-                    {% endfor %}
-                </p>
+<br><br>
 
-                <p class="source">
-                    Source: {{ r.source }}
-                </p>
+{% if r.sentiment == "Positive" %}
+<span class="positive">😊 Positive</span>
 
-                {% if r.prediction == "Positive" %}
+{% elif r.sentiment == "Negative" %}
+<span class="negative">😡 Negative</span>
 
-                    <span class="positive">
-                        😊 Positive
-                    </span>
+{% else %}
+<span class="neutral">😐 Neutral</span>
+{% endif %}
 
-                {% elif r.prediction == "Negative" %}
+{% if r.link %}
+<br><br>
+<a href="{{ r.link }}" target="_blank">
+Read Source →
+</a>
+{% endif %}
 
-                    <span class="negative">
-                        😡 Negative
-                    </span>
+</div>
 
-                {% else %}
+{% endfor %}
 
-                    <span class="neutral">
-                        😐 Neutral
-                    </span>
+</div>
 
-                {% endif %}
 
-            </div>
-
-        {% endfor %}
-
-    </div>
+{% endif %}
 
 </div>
 

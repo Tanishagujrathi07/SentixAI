@@ -1,343 +1,250 @@
 from flask import Flask, render_template, request
 import pandas as pd
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression, LinearRegression
-from sklearn.pipeline import Pipeline
-from sklearn.cluster import KMeans
+import requests, os, base64
+from io import BytesIO
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import seaborn as sns
-from io import BytesIO
-import base64
-import os
+from dotenv import load_dotenv
 
+load_dotenv()
 app = Flask(__name__)
+API = os.getenv("SERPAPI_KEY")
 
-# Product: Brand, Category, Price, Description, Purchases
-products = {
-    "iPhone 15": ["Apple", "Smartphone", "₹69,999",
-                  "Powerful smartphone with excellent camera.", 1200],
+positive = ["excellent","amazing","great","good","love","fast","beautiful",
+            "powerful","useful","comfortable","perfect","best"]
 
-    "Galaxy S24": ["Samsung", "Smartphone", "₹74,999",
-                   "Bright display with powerful performance.", 980],
+negative = ["poor","bad","slow","heavy","expensive","terrible","inaccurate",
+            "hot","issue","problem","broken","weak"]
 
-    "OnePlus 12": ["OnePlus", "Smartphone", "₹59,999",
-                   "Fast performance with long battery life.", 850],
-
-    "HP Pavilion 15": ["HP", "Laptop", "₹64,999",
-                       "Laptop for study, work and daily use.", 920],
-
-    "Dell Inspiron 15": ["Dell", "Laptop", "₹69,999",
-                          "Reliable laptop for work and study.", 780],
-
-    "ASUS ROG Strix": ["ASUS", "Laptop", "₹99,999",
-                       "High-performance gaming laptop.", 640],
-
-    "Sony WH-1000XM5": ["Sony", "Audio", "₹29,999",
-                        "Premium headphones with noise cancellation.", 1100],
-
-    "Apple Watch Series 9": ["Apple", "Wearable", "₹39,999",
-                             "Smartwatch with health and fitness features.", 720],
-
-    "iPad Air": ["Apple", "Tablet", "₹59,999",
-                 "Lightweight tablet with a sharp display.", 680]
-}
-
-# Demo reviews
-# Replace/extend this with real permitted review data.
-data = [
-    ["iPhone 15", "Camera quality is excellent", 5, "Demo"],
-    ["iPhone 15", "Battery lasts all day", 5, "Demo"],
-    ["iPhone 15", "Phone heats up quickly", 2, "Demo"],
-
-    ["Galaxy S24", "The display is beautiful", 5, "Demo"],
-    ["Galaxy S24", "Very fast and powerful", 5, "Demo"],
-    ["Galaxy S24", "Sometimes it gets hot", 2, "Demo"],
-
-    ["OnePlus 12", "Performance is amazing", 5, "Demo"],
-    ["OnePlus 12", "Battery life is excellent", 5, "Demo"],
-    ["OnePlus 12", "Phone is slightly heavy", 3, "Demo"],
-
-    ["HP Pavilion 15", "Laptop is very fast", 5, "Demo"],
-    ["HP Pavilion 15", "Keyboard feels great", 4, "Demo"],
-    ["HP Pavilion 15", "Battery backup is average", 3, "Demo"],
-
-    ["Dell Inspiron 15", "Very good laptop for work", 5, "Demo"],
-    ["Dell Inspiron 15", "Screen quality is excellent", 5, "Demo"],
-    ["Dell Inspiron 15", "Laptop feels heavy", 2, "Demo"],
-
-    ["ASUS ROG Strix", "Gaming performance is excellent", 5, "Demo"],
-    ["ASUS ROG Strix", "Graphics are amazing", 5, "Demo"],
-    ["ASUS ROG Strix", "Battery life is poor", 2, "Demo"],
-
-    ["Sony WH-1000XM5", "Sound quality is excellent", 5, "Demo"],
-    ["Sony WH-1000XM5", "Very comfortable", 5, "Demo"],
-    ["Sony WH-1000XM5", "Connection is sometimes bad", 2, "Demo"],
-
-    ["Apple Watch Series 9", "The watch looks beautiful", 5, "Demo"],
-    ["Apple Watch Series 9", "Very useful and easy to use", 5, "Demo"],
-    ["Apple Watch Series 9", "Tracking is inaccurate", 2, "Demo"],
-
-    ["iPad Air", "Display quality is excellent", 5, "Demo"],
-    ["iPad Air", "Very smooth performance", 5, "Demo"],
-    ["iPad Air", "Price is too high", 3, "Demo"]
-]
-
-df = pd.DataFrame(
-    data,
-    columns=["product", "review", "rating", "source"]
-)
-
-# Load saved user/external reviews
 if os.path.exists("reviews.csv"):
-    saved = pd.read_csv("reviews.csv")
-
-    if "source" not in saved.columns:
-        saved["source"] = "User"
-
-    df = pd.concat([df, saved], ignore_index=True)
+    df = pd.read_csv("reviews.csv")
+else:
+    df = pd.DataFrame(columns=["product","review","rating"])
 
 
-positive = [
-    "excellent", "amazing", "love", "great", "good",
-    "beautiful", "powerful", "fast", "useful",
-    "comfortable", "smooth", "best"
-]
-
-negative = [
-    "poor", "bad", "terrible", "slow", "inaccurate",
-    "distorted", "heavy", "expensive", "hot",
-    "issue", "problem", "average"
-]
-
-
-def label(text):
-    text = text.lower()
-
-    if any(word in text for word in positive):
+def sentiment(text):
+    text = str(text).lower()
+    if any(x in text for x in positive):
         return "Positive"
-
-    if any(word in text for word in negative):
+    if any(x in text for x in negative):
         return "Negative"
-
     return "Neutral"
 
 
-df["sentiment"] = df["review"].apply(label)
+def chart(values, labels, title, pie=True):
+    plt.figure(figsize=(6,4))
+    if pie:
+        plt.pie(values, labels=labels, autopct="%1.0f%%")
+    else:
+        plt.bar(labels, values)
+        plt.xticks(rotation=25, ha="right")
+        plt.ylabel("Price (₹)")
+    plt.title(title)
 
-# NLP + Machine Learning Pipeline
-model = Pipeline([
-    ("tfidf", TfidfVectorizer()),
-    ("classifier", LogisticRegression(max_iter=1000))
-])
-
-model.fit(df["review"], df["sentiment"])
-df["prediction"] = model.predict(df["review"])
-
-
-def chart():
-    image = BytesIO()
-    plt.savefig(image, format="png", bbox_inches="tight")
-    image.seek(0)
-
-    result = base64.b64encode(image.getvalue()).decode()
+    img = BytesIO()
+    plt.savefig(img, format="png", bbox_inches="tight")
+    img.seek(0)
+    result = base64.b64encode(img.getvalue()).decode()
     plt.close()
-
     return result
 
 
-@app.route("/", methods=["GET", "POST"])
+def number(price):
+    try:
+        return float(str(price).replace("₹","").replace(",","").replace("$",""))
+    except:
+        return 0
+
+
+def search_product(query):
+    r = requests.get(
+        "https://serpapi.com/search.json",
+        params={
+            "engine":"google_shopping",
+            "q":query,
+            "api_key":API,
+            "gl":"in",
+            "hl":"en"
+        },
+        timeout=20
+    )
+
+    results = r.json().get("shopping_results", [])
+
+    if not results:
+        return None, []
+
+    first = results[0]
+
+    product = {
+        "name": first.get("title", query),
+        "price": first.get("price","N/A"),
+        "rating": first.get("rating","N/A"),
+        "reviews": first.get("reviews",0),
+        "image": first.get("thumbnail",""),
+        "link": first.get("direct_link") or first.get("link") or first.get("product_link",""),
+        "source": first.get("source","Online Store")
+    }
+
+    sellers = []
+
+    for x in results[:10]:
+        sellers.append({
+            "name": x.get("title",""),
+            "source": x.get("source","Online Store"),
+            "price": x.get("price","N/A"),
+            "rating": x.get("rating","N/A"),
+            "reviews": x.get("reviews",0),
+            "image": x.get("thumbnail",""),
+            "link": x.get("direct_link") or x.get("link") or x.get("product_link","")
+        })
+
+    return product, sellers
+
+
+def web_reviews(product):
+    r = requests.get(
+        "https://serpapi.com/search.json",
+        params={
+            "engine":"google",
+            "q":product + " customer reviews",
+            "api_key":API,
+            "gl":"in",
+            "hl":"en"
+        },
+        timeout=20
+    )
+
+    data = r.json()
+    reviews = []
+
+    for x in data.get("organic_results", [])[:8]:
+        text = x.get("snippet","")
+        if text:
+            reviews.append({
+                "review":text,
+                "source":x.get("source","Web"),
+                "link":x.get("link",""),
+                "rating":0,
+                "sentiment":sentiment(text)
+            })
+
+    return reviews
+
+
+@app.route("/", methods=["GET","POST"])
 def home():
 
-    categories = sorted(set(p[1] for p in products.values()))
-
-    category = request.form.get("category", "All")
-    search = request.form.get("search", "").lower().strip()
-
-    # Filter products
-    names = [
-        name for name, info in products.items()
-        if (category == "All" or info[1] == category)
-        and search in name.lower()
-    ]
-
-    if not names:
-        names = list(products)
-
-    selected = request.form.get("product", names[0])
-
-    if selected not in products:
-        selected = names[0]
-
-    p = df[df["product"] == selected]
-
-    if p.empty:
-        p = df[df["product"] == names[0]]
-        selected = names[0]
-
-    # Sentiment counts
-    counts = p["prediction"].value_counts()
-
-    pos = counts.get("Positive", 0)
-    neu = counts.get("Neutral", 0)
-    neg = counts.get("Negative", 0)
-
-    # Pie chart
-    plt.figure(figsize=(5, 4))
-    plt.pie(
-        [pos, neu, neg],
-        labels=["Positive", "Neutral", "Negative"],
-        autopct="%1.0f%%"
-    )
-    plt.title("Sentiment Distribution")
-    pie = chart()
-
-    # Product comparison
-    comparison = df.groupby("product")["prediction"].apply(
-        lambda x: (x == "Positive").mean() * 100
-    ).reset_index()
-
-    comparison.columns = ["product", "positive"]
-
-    plt.figure(figsize=(9, 4))
-    sns.barplot(
-        data=comparison,
-        x="product",
-        y="positive"
+    search = request.form.get(
+        "search",
+        request.args.get("search","iPhone 17")
     )
 
-    plt.xticks(rotation=30)
-    plt.ylabel("Positive Sentiment %")
-    plt.title("Product Comparison")
+    product, sellers = search_product(search)
 
-    compare = chart()
+    if not product:
+        return render_template(
+            "index.html",
+            search=search,
+            error="No product found. Try another brand or model.",
+            reviews=[], products=[], total=0,
+            positive=0, neutral=0, negative=0,
+            rating="N/A", improvement="No data available.",
+            pie="", compare=""
+        )
 
-    # Purchase analysis
-    purchase = pd.DataFrame({
-        "product": list(products),
-        "purchases": [products[x][4] for x in products]
-    }).sort_values("purchases", ascending=False)
+    reviews = web_reviews(product["name"])
 
-    plt.figure(figsize=(9, 4))
-    sns.barplot(
-        data=purchase,
-        x="product",
-        y="purchases"
-    )
-
-    plt.xticks(rotation=30)
-    plt.ylabel("Purchases")
-    plt.title("Most Purchased Products")
-
-    purchase_chart = chart()
-
-    # Linear Regression
-    temp = df.copy()
-
-    temp["score"] = temp["prediction"].map({
-        "Negative": -1,
-        "Neutral": 0,
-        "Positive": 1
-    })
-
-    reg = LinearRegression()
-    reg.fit(temp[["rating"]], temp["score"])
-
-    score = round(
-        float(reg.predict([[p["rating"].mean()]])[0]),
-        2
-    )
-
-    # K-Means
-    features = TfidfVectorizer().fit_transform(df["review"])
-
-    km = KMeans(
-        n_clusters=3,
-        random_state=42,
-        n_init=10
-    )
-
-    clusters = len(km.fit_predict(features))
-
-    # Model confidence
-    confidence = round(
-        np.mean(
-            np.max(
-                model.predict_proba(p["review"]),
-                axis=1
+    if len(df):
+        own = df[
+            df["product"].astype(str).str.contains(
+                search, case=False, na=False
             )
-        ) * 100
+        ]
+
+        for _, x in own.iterrows():
+            reviews.append({
+                "review":x["review"],
+                "source":"SentixAI User",
+                "link":"",
+                "rating":int(x["rating"]),
+                "sentiment":sentiment(x["review"])
+            })
+
+    pos = sum(x["sentiment"]=="Positive" for x in reviews)
+    neu = sum(x["sentiment"]=="Neutral" for x in reviews)
+    neg = sum(x["sentiment"]=="Negative" for x in reviews)
+    total = pos + neu + neg
+
+    positive_pct = round(pos/total*100) if total else 0
+    neutral_pct = round(neu/total*100) if total else 0
+    negative_pct = round(neg/total*100) if total else 0
+
+    pie = chart(
+        [pos,neu,neg],
+        ["Positive","Neutral","Negative"],
+        "Review Sentiment"
+    ) if total else ""
+
+    seller_names = []
+    seller_prices = []
+
+    for x in sellers:
+        p = number(x["price"])
+        if p:
+            seller_names.append(x["source"][:14])
+            seller_prices.append(p)
+
+    compare = chart(
+        seller_prices,
+        seller_names,
+        "Price Comparison",
+        False
+    ) if seller_prices else ""
+
+    bad = " ".join(
+        x["review"].lower()
+        for x in reviews
+        if x["sentiment"]=="Negative"
     )
 
-    # Improvement areas
-    bad_reviews = p[
-        p["prediction"] == "Negative"
-    ]["review"].str.lower()
+    issues = [x for x in negative if x in bad]
 
-    issues = [
-        word for word in negative
-        if any(word in review for review in bad_reviews)
+    improvement = (
+        "We need to work on: " + ", ".join(dict.fromkeys(issues[:5]))
+        if issues else
+        "No major recurring problem was detected."
+    )
+
+    # Useful links for major Indian stores
+    stores = [
+        ("Official / Brand", "https://www.google.com/search?q=" + search.replace(" ","+") ),
+        ("Amazon", "https://www.amazon.in/s?k=" + search.replace(" ","+") ),
+        ("Flipkart", "https://www.flipkart.com/search?q=" + search.replace(" ","+") ),
+        ("Croma", "https://www.croma.com/searchB?q=" + search.replace(" ","%20") ),
+        ("Reliance Digital", "https://www.reliancedigital.in/search?q=" + search.replace(" ","%20"))
     ]
-
-    improvement = ", ".join(
-        issues[:3]
-    ) or "No major issues found"
-
-    # Platform/source analysis
-    sources = p["source"].value_counts().to_dict()
 
     return render_template(
         "index.html",
-
-        categories=categories,
-        category=category,
         search=search,
-
-        names=names,
-        selected=selected,
-
-        detail=products[selected],
-
-        reviews=p.to_dict("records"),
-
-        total=len(p),
-
-        rating=round(
-            p["rating"].mean(),
-            1
-        ),
-
-        positive=round(
-            pos / len(p) * 100
-        ),
-
-        neutral=round(
-            neu / len(p) * 100
-        ),
-
-        negative=round(
-            neg / len(p) * 100
-        ),
-
-        confidence=confidence,
-
-        score=score,
-
-        clusters=clusters,
-
+        selected=product["name"],
+        detail=product,
+        image=product["image"],
+        buy_link=product["link"],
+        total=product["reviews"],
+        rating=product["rating"],
+        positive=positive_pct,
+        neutral=neutral_pct,
+        negative=negative_pct,
+        score=round((pos-neg)/total,2) if total else 0,
         improvement=improvement,
-
-        sources=sources,
-
-        best_product=purchase.iloc[0]["product"],
-
         pie=pie,
-
         compare=compare,
-
-        purchase_chart=purchase_chart
+        reviews=reviews,
+        products=sellers,
+        stores=stores
     )
 
 
@@ -347,62 +254,30 @@ def review():
     product = request.form["product"]
     text = request.form["review"]
     rating = int(request.form["rating"])
+    result = sentiment(text)
 
-    sentiment = model.predict([text])[0]
+    action = {
+        "Negative":"We will work on improving this issue based on your feedback.",
+        "Positive":"We will continue maintaining this quality.",
+        "Neutral":"We will monitor this area and look for improvements."
+    }[result]
 
-    confidence = round(
-        model.predict_proba([text]).max() * 100
-    )
-
-    new_review = pd.DataFrame(
-        [[product, text, rating, "User"]],
-        columns=[
-            "product",
-            "review",
-            "rating",
-            "source"
-        ]
-    )
-
-    new_review.to_csv(
+    pd.DataFrame(
+        [[product,text,rating]],
+        columns=["product","review","rating"]
+    ).to_csv(
         "reviews.csv",
         mode="a",
         header=not os.path.exists("reviews.csv"),
         index=False
     )
 
-    if sentiment == "Negative":
-
-        action = (
-            "We will work on improving "
-            "this issue."
-        )
-
-    elif sentiment == "Positive":
-
-        action = (
-            "We will continue maintaining "
-            "this quality."
-        )
-
-    else:
-
-        action = (
-            "We will monitor this area "
-            "and look for improvements."
-        )
-
     return render_template(
         "review.html",
-
         product=product,
         review=text,
         rating=rating,
-
-        sentiment=sentiment,
-
-        confidence=confidence,
-
+        sentiment=result,
         action=action
     )
 

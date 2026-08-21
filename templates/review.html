@@ -2,121 +2,87 @@
 <html>
 
 <head>
-    <title>Review Analysis</title>
 
-    <style>
-        body {
-            font-family: Arial;
-            background: #f3f5f7;
-            text-align: center;
-            padding: 40px;
-        }
+<title>Review Analysis</title>
 
-        .card {
-            background: white;
-            max-width: 650px;
-            margin: auto;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 3px 12px #ddd;
-        }
+<style>
 
-        .positive {
-            color: green;
-        }
+body{
+font-family:Arial;
+background:#071a33;
+text-align:center;
+padding:40px
+}
 
-        .negative {
-            color: red;
-        }
+.card{
+background:white;
+max-width:650px;
+margin:auto;
+padding:30px;
+border-radius:14px;
+box-shadow:0 5px 18px #0005
+}
 
-        .neutral {
-            color: orange;
-        }
+.positive{color:green}
+.negative{color:red}
+.neutral{color:#d97700}
 
-        .action {
-            padding: 15px;
-            background: #f7f7f7;
-            border-radius: 8px;
-            font-weight: bold;
-        }
+.action{
+padding:15px;
+background:#eef7fc;
+border-radius:8px;
+font-weight:bold
+}
 
-        a {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 12px 20px;
-            background: #202124;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-        }
-    </style>
+a{
+display:inline-block;
+margin-top:20px;
+padding:12px 20px;
+background:#0077b6;
+color:white;
+text-decoration:none;
+border-radius:7px
+}
+
+</style>
+
 </head>
+
 
 <body>
 
 <div class="card">
 
-    <h1>🔍 Your Review Analysis</h1>
+<h1>🔍 Your Review Analysis</h1>
 
-    <h3>{{ product }}</h3>
+<h3>{{ product }}</h3>
 
-    <p>
-        "{{ review }}"
-    </p>
+<p>"{{ review }}"</p>
 
-    <p>
-        Rating:
-        {% for i in range(rating) %}
-            ⭐
-        {% endfor %}
-    </p>
+<p>
+Rating:
+{% for i in range(rating) %}⭐{% endfor %}
+</p>
 
-    <h2 class="{{ sentiment|lower }}">
+<h2 class="{{ sentiment|lower }}">
 
-        {% if sentiment == "Positive" %}
-            😊 Positive
+{% if sentiment=="Positive" %}
+😊 Positive
+{% elif sentiment=="Negative" %}
+😡 Negative
+{% else %}
+😐 Neutral
+{% endif %}
 
-        {% elif sentiment == "Negative" %}
-            😡 Negative
+</h2>
 
-        {% else %}
-            😐 Neutral
-        {% endif %}
+<div class="action">
+💡 {{ action }}
+</div>
 
-    </h2>
-
-    <h3>
-        Model Confidence: {{ confidence }}%
-    </h3>
-
-    <div class="action">
-        💡 {{ action }}
-    </div>
-
-    {% if sentiment == "Negative" %}
-
-        <p>
-            🛠️ Your feedback has been saved and can help
-            identify areas that need improvement.
-        </p>
-
-    {% elif sentiment == "Positive" %}
-
-        <p>
-            👍 Your positive feedback has been saved.
-        </p>
-
-    {% else %}
-
-        <p>
-            📊 Your feedback has been saved for future analysis.
-        </p>
-
-    {% endif %}
-
-    <a href="/">
-        ← Back to Dashboard
-    </a>
+<a href="/">
+← Back to Dashboard
+</a>
 
 </div>
 
